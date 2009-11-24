@@ -22,7 +22,7 @@
  */
 
 /*Words to read at once*/
-const unsigned BUFF_SIZE=255;
+const unsigned BUFF_SIZE=256;
 /*Bits per byte*/
 const char BYTE_SIZE=8;
 
@@ -36,7 +36,7 @@ struct
   char w_;        /*incomplete byte warning (bool)*/
   unsigned bpb_;  /*bytes per buffer*/
   FILE* inp_;     /*input file*/
-  FILE* outp_;
+  char* put_;     /*put pointer*/
 } Conf;
 
 void
@@ -97,16 +97,16 @@ close_input(Conf* conf)
 
 /* Prints (in the appropriate number of positions) the word as a binary number */
 void
-print_bin(unsigned x, const Conf* conf)
+get_bin_str(unsigned x, const Conf* conf, char* p)
 {
   int i;
   for(i=BYTE_SIZE*conf->bpw_; i; --i) {
     if(0 == i%BYTE_SIZE) {
-      printf(" ");
+      *p++=' ';
     }
-    printf("%d", (1 << (i-1))&x?1:0);
+    *p++=(1 << (i-1))&x?'1':'0';
   }
-  printf("\n");
+  *p++='\0';
 }
 
 void
@@ -114,7 +114,9 @@ write_output(const Conf* conf)
 {
   unsigned br, word, c=0;
   char *buff = (char*)malloc(conf->bpb_);
-  if( NULL == buff ) {
+  char *bin_str = (char*)malloc(conf->bpb_*BYTE_SIZE);
+
+  if( NULL == buff || NULL == bin_str ) {
           fprintf(stderr, "Out of memory");
           exit(1);
   }
@@ -133,13 +135,15 @@ write_output(const Conf* conf)
           }
         }
         if(conf->n_)
-          printf("%u: ", ++c);
+          fprintf(stdout, "%u: ", ++c);
         if(conf->b_) {
-          print_bin(word, conf);
+          get_bin_str(word, conf, bin_str);
+          printf("%s\n", bin_str);
         }
         else printf("%u\n", word);
       }
   }
+  free(bin_str);
   free(buff);
 }
 
@@ -147,7 +151,7 @@ int
 main(int argc, char** argv)
 {
   extern int optind;
-  Conf conf = { 0, 0, 1, 1, BUFF_SIZE, NULL };
+  Conf conf = { 0, 0, 1, 1, BUFF_SIZE, NULL, NULL };
   read_opts( argc, argv, &conf );
   open_input( argv[optind], &conf );
   write_output( &conf );
