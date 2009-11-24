@@ -36,7 +36,6 @@ struct
   char w_;        /*incomplete byte warning (bool)*/
   unsigned bpb_;  /*bytes per buffer*/
   FILE* inp_;     /*input file*/
-  char* put_;     /*put pointer*/
 } Conf;
 
 void
@@ -151,7 +150,7 @@ int
 main(int argc, char** argv)
 {
   extern int optind;
-  Conf conf = { 0, 0, 1, 1, BUFF_SIZE, NULL, NULL };
+  Conf conf = { 0, 0, 1, 1, BUFF_SIZE, NULL };
   read_opts( argc, argv, &conf );
   open_input( argv[optind], &conf );
   write_output( &conf );
